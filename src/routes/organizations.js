@@ -4,6 +4,10 @@ const orgController = require('../controllers/organizations');
 const authMiddleware = require('../middleware/auth');
 
 router.post('/', authMiddleware, orgController.create);
-router.post('/:id', authMiddleware, orgController.getOne);
 router.get('/getAll', authMiddleware,orgController.getAll);
-module.exports =router;
+
+
+router.get('/:id', authMiddleware, orgController.getOne);
+router.put('/:id', authMiddleware, orgController.update);
+router.delete('/:id',authMiddleware, orgController.delete);
+module.exports = router;
