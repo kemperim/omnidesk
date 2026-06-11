@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Organization {
+  id        String    @id @default(uuid())
+  name      String
+  subdomain String    @unique
+  status    String    @default("active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updateAt  DateTime  @updatedAt @map("updated_at") 
+
+  users       User[]
+  clients     Client[]
+  channels    Channel[]
+  categories  Category[]
+  tickets     Ticket[]
+  auditLogs   AuditLog[]
+  @@map("organizations")
+}
+
+model User{
+  id           String   @id @default(uuid())
+  orgId        String?  @map("org_id")
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+
+  org        Organization? @relation(fields:[orgId], references:[id])
+  tickets      Ticket[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Client {
+  id           String   @id @default(uuid())
+  orgId        String   @map("org_id")
+  name         String
+  email        String
+  phone        String?
+  telegramId   String?  @map("telegram_id")
+  whatsappId   String?  @map("whatsapp_id")
+  externalId   String?  @map("external_id")  // ID из внешней системы (СЭД)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  org          Organization @relation(fields: [orgId], references: [id])
+  tickets      Ticket[]
+
+  @@unique([orgId, email])
+  @@map("clients") 
+}
+
+model Channel{
+  id        String   @id @default(uuid())
+  orgId     String   @map("org_id")
+  type      String
+  name      String
+  config    Json
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")  
+
+  org       Organization  @relation(fields:[orgId], references: [id])
+  @@map("channels")
+}
+
+model Category{
+  id        String   @id @default(uuid())
+  orgId     String   @map("org_id")
+  name      String
+  color     String   @default("#534AB7")
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  org       Organization @relation(fields: [orgId], references: [id])
+  tickets   Ticket[]
+
+  @@map("categories")
+}
+
+model Ticket{
+  id         String    @id @default(uuid())
+  orgId      String    @map("org_id")
+  clientId   String    @map("client_id")
+  operatorId String?   @map("operator_id")
+  categoryId String?   @map("category_id")
+  channel    String
+  status     String    @default("new")
+  priority   String    @default("medium")
+  subject    String
+  aiSummary  String?   @map("ai_summary")
+  aiRaw      Json?     @map("ai_raw")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  closedAt   DateTime? @map("closed_at")
+
+  org       Organization @relation(fields: [orgId], references: [id])
+  client    Client       @relation(fields: [clientId], references: [id])
+  operator  User?        @relation(fields: [operatorId], references: [id])  
+  category  Category?    @relation(fields: [categoryId], references: [id])  
+  messages  Message[]   
+
+  @@map("tickets") 
+}
+
+model Message{
+  id         String   @id @default(uuid())
+  ticketId   String   @map("ticket_id")
+  senderId   String   @map("sender_id")
+  senderType String   @map("sender_type")
+  content    String
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  ticket Ticket @relation(fields:[ticketId], references: [id])
+
+  @@map("messages")  
+}
+
+model AuditLog{
+  id         String   @id @default(uuid())
+  orgId      String   @map("org_id")
+  userId     String   @map("user_id")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  payload    Json?
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  org        Organization @relation(fields:[orgId], references: [id])
+  user       User         @relation(fields:[userId], references: [id])
+
+  @@map("audit_logs")
+
+}

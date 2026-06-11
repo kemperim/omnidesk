@@ -1,0 +1,34 @@
+const express = require('express');
+const dotenv = require('dotenv');
+dotenv.config();
+const prisma = require('./prisma')
+const authRoutes = require('./routes/auth')
+
+
+const app = express();
+
+app.use(express.json());
+app.use('/api/auth',authRoutes)
+app.get('/', async (req,res)=>{
+    
+    try{
+        await prisma.$queryRaw `SELECT 1`;
+
+        res.json({
+            message: 'Сервер работает!',
+            database: 'Подключение к базе данных установленно'            
+        });
+
+    }catch(error){
+        res.json({
+            message:'Сервер работает',
+            database: '',
+            error:error.message
+        });
+    }
+    });
+
+const PORT = process.env.PORT || 3000
+app.listen(PORT,()=>{
+    console.log('Сервер запущен порту ' + PORT);
+})
