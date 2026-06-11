@@ -27,3 +27,29 @@ exports.create = async(req, res) =>{
     }
 
 }
+
+exports.getAll = async(req,res)=>{
+    try{
+        const organizations = await prisma.organization.findMany({
+            orderBy: {createdAt:'desc'}
+        });
+        res.json(organizations);
+    }catch(error){
+        res.status(500).json({message:'Ошибка сервера', error:error.message});
+    }
+};
+
+exports.getOne = async(req,res)=>{
+    try{
+        const{id} = req.params;
+        const organization = await prisma.organization.findUnique({
+            where:{id:id}
+        })
+        if (!organization){
+            return res.status(404).json({message:'Организация не найдена!'});
+        }
+        res.json(organization);
+    }catch(error){
+        res.status(500).json({message:'Ошибка сервера', error:error.message});
+    }
+    };
