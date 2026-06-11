@@ -4,6 +4,7 @@ dotenv.config();
 const prisma = require('./prisma')
 const authRoutes = require('./routes/auth')
 const orgRoutes  = require('./routes/organizations')
+const inviteRoutes = require('./routes/invites')
 
 
 const app = express();
@@ -11,6 +12,7 @@ const app = express();
 app.use(express.json());
 app.use('/api/auth',authRoutes)
 app.use('/api/organizations',orgRoutes)
+app.use('/api/invite',inviteRoutes)
 app.get('/', async (req,res)=>{
 
     

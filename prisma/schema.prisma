@@ -22,6 +22,7 @@ model Organization {
   categories  Category[]
   tickets     Ticket[]
   auditLogs   AuditLog[]
+  invites     Invite[]
   @@map("organizations")
 }
 
@@ -144,4 +145,19 @@ model AuditLog{
 
   @@map("audit_logs")
 
+}
+
+model Invite {
+  id        String   @id @default(uuid())
+  orgId     String   @map("org_id")
+  email     String
+  role      String
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  org       Organization @relation(fields: [orgId], references: [id])
+
+  @@map("invites")
 }
