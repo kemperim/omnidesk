@@ -5,14 +5,15 @@ const prisma = require('./prisma')
 const authRoutes = require('./routes/auth')
 const orgRoutes  = require('./routes/organizations')
 const inviteRoutes = require('./routes/invites')
-
+const userRoutes = require('./routes/users')
 
 const app = express();
 
 app.use(express.json());
-app.use('/api/auth',authRoutes)
-app.use('/api/organizations',orgRoutes)
-app.use('/api/invite',inviteRoutes)
+app.use('/api/auth',authRoutes);
+app.use('/api/organizations',orgRoutes);
+app.use('/api/invite',inviteRoutes);
+app.use('/api/users',userRoutes);
 app.get('/', async (req,res)=>{
 
     
