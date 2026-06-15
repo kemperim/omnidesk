@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const userController = require("../controllers/user");
-const authMiddleware = require('../middleware/auth');
-const roleMiddleware = require('../middleware/role');
+const userController = require("../controllers/userController");
+const authMiddleware = require('../middleware/authMiddleware');
+const roleMiddleware = require('../middleware/roleMiddleware');
 
 router.get('/', authMiddleware,roleMiddleware('admin','manager'), userController.getAll);
 router.get('/:id', authMiddleware,roleMiddleware('admin','manager'), userController.getOne);

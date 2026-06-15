@@ -2,11 +2,11 @@ const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config();
 const prisma = require('./prisma');
-const authRoutes = require('./routes/auth');
-const orgRoutes  = require('./routes/organizations');
-const inviteRoutes = require('./routes/invites');
-const userRoutes = require('./routes/users');
-const ticketRoutes = require('./routes/tickets');
+const authRoutes = require('./routes/authRoute');
+const orgRoutes  = require('./routes/organizationsRoute');
+const inviteRoutes = require('./routes/invitesRoute');
+const userRoutes = require('./routes/usersRoute');
+const ticketRoutes = require('./routes/ticketsRoute');
 
 const app = express();
 
