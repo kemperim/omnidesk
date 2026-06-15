@@ -7,6 +7,7 @@ const orgRoutes  = require('./routes/organizationsRoute');
 const inviteRoutes = require('./routes/invitesRoute');
 const userRoutes = require('./routes/usersRoute');
 const ticketRoutes = require('./routes/ticketsRoute');
+const messageRoutes = require('./routes/messageRoute');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use('/api/organizations',orgRoutes);
 app.use('/api/invite',inviteRoutes);
 app.use('/api/users',userRoutes);
 app.use('/api/tickets',ticketRoutes);
+app.use('/api/tickets/:ticketId/messages', messageRoutes);
 app.get('/', async (req,res)=>{
 
     
