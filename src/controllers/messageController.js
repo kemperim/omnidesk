@@ -62,6 +62,9 @@ exports.create  = async(req,res) =>{
             });
         }
 
+        const io = req.app.get('io');
+        io.to(ticketId).emit('new_message', message);
+        
         res.status(201).json({message:'Сообщение отправлено', data:message});
 
     }catch(error){

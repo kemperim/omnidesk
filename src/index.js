@@ -1,6 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config();
+const http = require('http');
+const {Server} =require('socket.io');
 const prisma = require('./prisma');
 const authRoutes = require('./routes/authRoute');
 const orgRoutes  = require('./routes/organizationsRoute');
@@ -10,6 +12,12 @@ const ticketRoutes = require('./routes/ticketsRoute');
 const messageRoutes = require('./routes/messageRoute');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server,{
+    cors:{
+        origin:'*'
+    }
+});
 
 app.use(express.json());
 app.use('/api/auth',authRoutes);
@@ -19,8 +27,6 @@ app.use('/api/users',userRoutes);
 app.use('/api/tickets',ticketRoutes);
 app.use('/api/tickets/:ticketId/messages', messageRoutes);
 app.get('/', async (req,res)=>{
-
-    
     try{
         await prisma.$queryRaw `SELECT 1`;
 
@@ -38,7 +44,28 @@ app.get('/', async (req,res)=>{
     }
     });
 
+io.on('connection',(socket)=>{
+    console.log('Пользователь подключился: ', socket.id);
+
+    socket.on('join_ticket', (ticketId)=>{
+        socket.join(ticketId);
+        console.log(`Пользователь ${socket.id} вошел в тикет ${ticketId} `);
+    });
+    socket.on('leave_ticket',(ticketId)=>{
+        socket.leave(ticketId);
+        console.log(`Пользователь ${socket.id} покинул тикет ${ticketId}`);
+    });
+    socket.on('disconnect', () => {
+        console.log('Пользователь отключился:', socket.id);
+    });
+
+});
+
+app.set('io',io);
+
+
+
 const PORT = process.env.PORT || 3000
-app.listen(PORT,()=>{
+server.listen(PORT,()=>{
     console.log('Сервер запущен порту ' + PORT);
 })
