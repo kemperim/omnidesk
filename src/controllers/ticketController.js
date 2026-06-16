@@ -1,6 +1,6 @@
 const { stat } = require('node:fs');
 const prisma = require('../prisma')
-
+const aiService = require('../services/aiService');
 exports.create = async(req,res)=>{
     try{
         const {subject, message, channel, clientId,orgId} = req.body;
@@ -22,6 +22,12 @@ exports.create = async(req,res)=>{
         if (!client) {
             return res.status(404).json({ message: 'Клиент не найден' });
         }
+        let aiResult = null
+        try{
+            aiResult = await aiService.classifyTicket(subject,message);
+        }catch(aiError){
+            console.error('AI ошибка', aiError.message)
+        }
 
         const ticket = await prisma.ticket.create({
             data:{
@@ -30,9 +36,12 @@ exports.create = async(req,res)=>{
                 channel,
                 orgId,
                 status:'new',
-                priority:'medium'
+                priority: aiResult?.priority || 'medium',
+                aiSummary: aiResult?.summary || null,
+                aiRaw: aiResult || null
             }
         });
+        
         await prisma.message.create({
             data:{
                 ticketId: ticket.id,
