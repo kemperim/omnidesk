@@ -4,12 +4,14 @@ dotenv.config();
 const http = require('http');
 const {Server} =require('socket.io');
 const prisma = require('./prisma');
+const telegramService = require('./services/telegramService');
 const authRoutes = require('./routes/authRoute');
 const orgRoutes  = require('./routes/organizationsRoute');
 const inviteRoutes = require('./routes/invitesRoute');
 const userRoutes = require('./routes/usersRoute');
 const ticketRoutes = require('./routes/ticketsRoute');
 const messageRoutes = require('./routes/messageRoute');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -60,9 +62,11 @@ io.on('connection',(socket)=>{
     });
 
 });
-
 app.set('io',io);
 
+telegramService.startAllBots()
+    .then(() => console.log('Все телеграм боты запущены '))
+    .catch(err=>console.error('Ошибка заргузки ботов: ', err))
 
 
 const PORT = process.env.PORT || 3000
