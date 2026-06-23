@@ -11,7 +11,8 @@ const inviteRoutes = require('./routes/invitesRoute');
 const userRoutes = require('./routes/usersRoute');
 const ticketRoutes = require('./routes/ticketsRoute');
 const messageRoutes = require('./routes/messageRoute');
-
+const channelsRoutes = require('./routes/channelsRoute');
+const { checkServerIdentity } = require('tls');
 
 const app = express();
 const server = http.createServer(app);
@@ -28,6 +29,8 @@ app.use('/api/invite',inviteRoutes);
 app.use('/api/users',userRoutes);
 app.use('/api/tickets',ticketRoutes);
 app.use('/api/tickets/:ticketId/messages', messageRoutes);
+app.use('/api/channels', channelsRoutes);
+
 app.get('/', async (req,res)=>{
     try{
         await prisma.$queryRaw `SELECT 1`;

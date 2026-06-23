@@ -1,5 +1,5 @@
 const prisma = require('../prisma');
-
+const telegramService = require('../services/telegramService');
 exports.getAll = async(req,res)=>{
     try{
         const{ticketId} = req.params;
@@ -37,7 +37,8 @@ exports.create  = async(req,res) =>{
         }
 
         const ticket  = await prisma.ticket.findFirst({
-            where:{id: ticketId, orgId}
+            where:{id: ticketId, orgId},
+            include:{client:true}
         });
         if(!ticket){
             return res.status(404).json({message:'Тикет не найден'});
@@ -65,6 +66,14 @@ exports.create  = async(req,res) =>{
         const io = req.app.get('io');
         io.to(ticketId).emit('new_message', message);
         
+        if(ticket.channel === 'telegram' && ticket.client.telegramId){
+            const channel = await prisma.channel.findFirst({
+                where:{orgId, type:'telegram', isActive:true}
+            });
+            if (channel){
+                await telegramService.sendMessage(channel.id, ticket.client.telegramId, content);
+            }
+        }
         res.status(201).json({message:'Сообщение отправлено', data:message});
 
     }catch(error){
