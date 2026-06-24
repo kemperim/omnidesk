@@ -29,6 +29,21 @@ exports.create = async(req,res)=>{
             return res.status(400).json({message:'Тип, название и настройки обязательны '});
         }
 
+        if(type ==='whatsapp'){
+            if(!config.instance_id || !config.api_tokenn || !config.api_url){
+                return res.status(400).json({ 
+                    message: 'Для WhatsApp нужны: instance_id, api_token, api_url' 
+                });
+            }
+        }
+        if(type==='telegram'){
+            if(!config.bot_token){
+                return res.status(400).json({
+                    message:'Для телеграма нужен bot_token'
+                });
+            }
+        }
+
         const existingChannel = await prisma.channel.findFirst({
             where:{orgId, type}
         });
