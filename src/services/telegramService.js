@@ -1,9 +1,9 @@
 const { Telegraf } = require('telegraf');
 const prisma = require('../prisma');
 const aiService = require('./aiService');
+const ticketService = require('./ticketService');
 
 const activeBots = {};
-
 
 exports.startBot = async (channel) => {
   if (activeBots[channel.id]) {
@@ -12,9 +12,7 @@ exports.startBot = async (channel) => {
   }
 
   const { bot_token } = channel.config;
-
   const bot = new Telegraf(bot_token);
-
 
   bot.on('text', async (ctx) => {
     try {
@@ -23,7 +21,6 @@ exports.startBot = async (channel) => {
       const firstName = ctx.from.first_name || '';
       const lastName = ctx.from.last_name || '';
       const name = `${firstName} ${lastName}`.trim();
-
 
       let client = await prisma.client.findFirst({
         where: { telegramId: chatId, orgId: channel.orgId }
@@ -41,62 +38,29 @@ exports.startBot = async (channel) => {
         console.log('Новый клиент создан:', client.name);
       }
 
-     
-      const openTicket = await prisma.ticket.findFirst({
-        where: {
-          clientId: client.id,
-          orgId: channel.orgId,
-          status: { in: ['new', 'in_progress'] }
-        }
+      let aiResult = null;
+      try {
+        aiResult = await aiService.classifyTicket(text, text);
+      } catch (e) {
+        console.error('AI ошибка:', e.message);
+      }
+
+      // Найти или создать тикет
+      const ticket = await ticketService.findOrCreateTicket({
+        clientId: client.id,
+        orgId: channel.orgId,
+        channel: 'telegram',
+        subject: text.substring(0, 100),
+        message: text,
+        aiResult
       });
 
-      if (openTicket) {
-   
-        await prisma.message.create({
-          data: {
-            ticketId: openTicket.id,
-            senderId: client.id,
-            senderType: 'client',
-            content: text
-          }
-        });
-
-        await ctx.reply('Ваше сообщение получено! Оператор ответит вам в ближайшее время.');
-        console.log(`Сообщение добавлено в тикет ${openTicket.id}`);
-
-      } else {
-        // Создаём новый тикет
-        let aiResult = null;
-        try {
-          aiResult = await aiService.classifyTicket(text, text);
-        } catch (e) {
-          console.error('AI ошибка:', e.message);
-        }
-
-        const ticket = await prisma.ticket.create({
-          data: {
-            subject: text.substring(0, 100),
-            channel: 'telegram',
-            orgId: channel.orgId,
-            clientId: client.id,
-            status: 'new',
-            priority: aiResult?.priority || 'medium',
-            aiSummary: aiResult?.summary || null,
-            aiRaw: aiResult || null
-          }
-        });
-
-        await prisma.message.create({
-          data: {
-            ticketId: ticket.id,
-            senderId: client.id,
-            senderType: 'client',
-            content: text
-          }
-        });
-
+      if (ticket.createdAt === ticket.updatedAt) {
         await ctx.reply('Здравствуйте! Ваше обращение принято. Мы свяжемся с вами в ближайшее время.');
         console.log(`Новый тикет создан: ${ticket.id}`);
+      } else {
+        await ctx.reply('Ваше сообщение получено! Оператор ответит вам в ближайшее время.');
+        console.log(`Сообщение добавлено в тикет ${ticket.id}`);
       }
 
     } catch (error) {
@@ -104,12 +68,10 @@ exports.startBot = async (channel) => {
     }
   });
 
-
   bot.launch();
   activeBots[channel.id] = bot;
   console.log(`Бот запущен для организации: ${channel.orgId}`);
 };
-
 
 exports.stopBot = async (channelId) => {
   if (activeBots[channelId]) {
@@ -127,7 +89,6 @@ exports.sendMessage = async (channelId, telegramId, text) => {
   }
   await bot.telegram.sendMessage(telegramId, text);
 };
-
 
 exports.startAllBots = async () => {
   const channels = await prisma.channel.findMany({

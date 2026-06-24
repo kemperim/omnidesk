@@ -12,6 +12,7 @@ const userRoutes = require('./routes/usersRoute');
 const ticketRoutes = require('./routes/ticketsRoute');
 const messageRoutes = require('./routes/messageRoute');
 const channelsRoutes = require('./routes/channelsRoute');
+const webhookRoutes = require('./routes/webhookRoute');
 const { checkServerIdentity } = require('tls');
 
 const app = express();
@@ -30,6 +31,8 @@ app.use('/api/users',userRoutes);
 app.use('/api/tickets',ticketRoutes);
 app.use('/api/tickets/:ticketId/messages', messageRoutes);
 app.use('/api/channels', channelsRoutes);
+app.use('/webhook', webhookRoutes);
+
 
 app.get('/', async (req,res)=>{
     try{

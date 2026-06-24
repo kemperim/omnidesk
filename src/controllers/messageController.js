@@ -1,5 +1,6 @@
 const prisma = require('../prisma');
 const telegramService = require('../services/telegramService');
+const whatsapService = require('../services/whatsappgrenapiService');
 exports.getAll = async(req,res)=>{
     try{
         const{ticketId} = req.params;
@@ -72,6 +73,19 @@ exports.create  = async(req,res) =>{
             });
             if (channel){
                 await telegramService.sendMessage(channel.id, ticket.client.telegramId, content);
+            }
+        }
+
+        if(ticket.channel === 'whatsapp' && ticket.client.whatsappId){
+            const channel = await prisma.channel.findFirst({
+                where:{
+                    orgId,
+                    type:'whatsapp',
+                    isActive: true
+                }
+            });
+            if(channel){
+                await whatsapService.sendMessage(channel, ticket.client.whatsappId, content);
             }
         }
         res.status(201).json({message:'Сообщение отправлено', data:message});
